@@ -46,3 +46,27 @@ test("suggestions are actionable", () => {
   const s = suggestions([{ id: "HAS_INSTALL" }])
   assert.match(s[0], /npm i/)
 })
+
+import { rewrite } from "../src/index.js"
+import { execFileSync } from "node:child_process"
+import { fileURLToPath } from "node:url"
+
+const BIN = join(fileURLToPath(new URL("..", import.meta.url)), "bin/readme-doctor.js")
+
+test("rewrite proposes a short, specific one-liner from title and install line", () => {
+  const md = "# readme-doctor\n\n## Install\n\n```bash\nnpm i -g readme-doctor\n```\n"
+  const line = rewrite(md)
+  assert.match(line, /readme-doctor/)
+  assert.match(line, /`npm i -g readme-doctor`/)
+  assert.ok(line.length < 120, "suggestion should be short: " + line)
+})
+
+test("--rewrite CLI flag prints the proposed one-liner", () => {
+  const dir = repo(
+    "# fast-cli\n\n## Install\n\n```bash\nnpm i -g fast-cli\n```\n\n## Usage\n\n```bash\nfast-cli .\n```\n",
+    { LICENSE: "MIT" },
+  )
+  const out = execFileSync("node", [BIN, dir, "--rewrite"], { encoding: "utf8" })
+  assert.match(out, /suggested first paragraph:/)
+  assert.match(out, /fast-cli — command-line tool\. Install with `npm i -g fast-cli`\./)
+})

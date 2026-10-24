@@ -48,6 +48,7 @@ npm i -g https://github.com/rustemmustafingovua-byte/readme-doctor/releases/down
 
 ```bash
 readme-doctor .
+readme-doctor . --rewrite
 readme-doctor . --json
 ```
 
@@ -58,10 +59,12 @@ readme-doctor — Why nobody is using your repository — checked in one command
 
 USAGE
   readme-doctor .
+  readme-doctor . --rewrite
   readme-doctor . --json
 
 COMMANDS / OPTIONS
-  --json  machine-readable output
+  --rewrite  propose a one-liner first paragraph from the title and install line
+  --json     machine-readable output
 
 Exit code 1 when the README has an error-level finding.
 

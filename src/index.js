@@ -7,7 +7,7 @@
  * the thing does in one sentence.
  */
 import { existsSync, readFileSync, statSync } from "node:fs"
-import { dirname, join, relative, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 
 export const CHECKS = {
   HAS_TITLE: "has a title",
@@ -25,6 +25,8 @@ export const CHECKS = {
 }
 
 const PLACEHOLDERS = [/\[your[- ]?(name|project|api[- ]?key|token)\]/i, /TODO/, /FIXME/, /lorem ipsum/i, /\bXXX\b/]
+const INSTALL_LINE_RE =
+  /^\s*(?:\$\s*)?((?:npm\s+(?:i|install)|pnpm\s+add|yarn\s+add|bun\s+add|pip\s+install|brew\s+install|go\s+install|cargo\s+install|docker\s+run|uv\s+add)\b[^\n`]*)/im
 
 /** Split a README into sections by heading. */
 export function parseSections(md) {
@@ -43,6 +45,58 @@ export function parseSections(md) {
   return sections
 }
 
+/** Propose a short, specific one-liner first paragraph from the title and the install line. */
+export function rewrite(dirOrMd) {
+  let md = String(dirOrMd || "")
+  if (md && !md.includes("\n") && existsSync(md)) {
+    try {
+      if (statSync(md).isDirectory()) {
+        const p = ["README.md", "readme.md", "README.MD", "Readme.md"]
+          .map((f) => join(md, f))
+          .find((f) => existsSync(f))
+        md = p ? readFileSync(p, "utf8") : ""
+      } else {
+        md = readFileSync(md, "utf8")
+      }
+    } catch {}
+  }
+
+  const sections = parseSections(md)
+  const rawTitle = (sections[0]?.title || "project").replace(/[`*_~]/g, "").trim()
+  const [namePart, taglinePart] = rawTitle.split(/\s+[—–-]\s+/, 2)
+  const title = (namePart || rawTitle || "project").trim()
+
+  const installMatch = md.match(INSTALL_LINE_RE)
+  const installCmd = installMatch ? installMatch[1].trim().replace(/\s+#.*$/, "").trim() : null
+
+  let pkg = null
+  if (installCmd) {
+    const tokens = installCmd
+      .replace(/^(?:npm\s+(?:i|install)|pnpm\s+add|yarn\s+add|bun\s+add|pip\s+install|brew\s+install|go\s+install|cargo\s+install|docker\s+run|uv\s+add)\s+/i, "")
+      .split(/\s+/)
+      .filter((t) => t && !t.startsWith("-"))
+    pkg = tokens[tokens.length - 1] || null
+  }
+
+  const isGlobalCli = installCmd ? /(?:^|\s)-(?:g|-global)\b|\b(?:brew|cargo|go)\s+install\b|\bdocker\s+run\b/i.test(installCmd) : false
+  const kind = isGlobalCli
+    ? "command-line tool"
+    : installCmd && /\b(?:pip|uv)\b/i.test(installCmd)
+      ? "Python package"
+      : "package"
+
+  const what = taglinePart
+    ? taglinePart.trim().replace(/\.$/, "")
+    : pkg && pkg !== title && !pkg.startsWith("http")
+      ? `${kind} (${pkg})`
+      : kind
+
+  if (installCmd) {
+    return `${title} — ${what}. Install with \`${installCmd}\`.`
+  }
+  return `${title} — ${what} that does one job well.`
+}
+
 /** Check a repository directory. */
 export function audit(dir) {
   const readmePath = ["README.md", "readme.md", "README.MD", "Readme.md"]
@@ -53,7 +107,7 @@ export function audit(dir) {
 
   if (!readmePath) {
     add("NO_README", "error", "no README found")
-    return { ok: false, findings, score: 0, readme: null }
+    return { ok: false, findings, score: 0, readme: null, rewrite: null }
   }
   const md = readFileSync(readmePath, "utf8")
   const sections = parseSections(md)
@@ -93,6 +147,7 @@ export function audit(dir) {
     lines: md.split("\n").length,
     sections: sections.length,
     findings,
+    rewrite: rewrite(md),
     score: Math.max(0, Math.round(100 - errors * 18 - warns * 8 - infos * 3)),
   }
 }
