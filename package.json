@@ -39,5 +39,10 @@
   "bugs": {
     "url": "https://github.com/rustemmustafingovua-byte/readme-doctor/issues"
   },
-  "homepage": "https://github.com/rustemmustafingovua-byte/readme-doctor"
+  "homepage": "https://github.com/rustemmustafingovua-byte/readme-doctor",
+  "funding": {
+    "custom": [
+      "https://github.com/sponsors/rustemmustafingovua-byte"
+    ]
+  }
 }

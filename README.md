@@ -20,6 +20,14 @@
 
 A README is the product page. readme-doctor audits the things that decide whether someone installs it: a working install line, a visible demo, a license, resolvable links, closed code fences and a first paragraph that says what the thing does.
 
+## Quick Start
+
+```bash
+git clone https://github.com/rustemmustafingovua-byte/readme-doctor.git
+cd readme-doctor && npm install
+npm test
+```
+
 ## Install
 
 ```bash
@@ -37,7 +45,10 @@ npm i -g https://github.com/rustemmustafingovua-byte/readme-doctor/releases/down
 ## What it does
 
 | | |
-|---|---|
+|
+
+⭐ **Star us on GitHub** — it helps others find the project.
+---|---|
 | **Eleven real checks** | install line, usage, license, badges, links, fences, placeholders |
 | **Broken link detection** | relative links are resolved against the repo |
 | **A score** | so two READMEs can be compared |
@@ -92,6 +103,12 @@ Every tool here is MIT and free. If it saved you time, you can support the work:
 - **GitHub Sponsors:** https://github.com/sponsors/rustemmustafingovua-byte
 
 Paid tiers of the hosted services are billed per call in USDC (x402) — no accounts, no keys.
+
+## Monetization
+
+This project earns through x402 micropayments, API key tiers, and hosted subscriptions. See package.json `funding` field and the live deployment for pay-per-call pricing.
+
+---
 
 ## License
 
